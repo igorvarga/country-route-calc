@@ -1,8 +1,8 @@
 # Implementation Plan: Country Route Calculation
 
 ## Stack
-- **JDK 25**, **Spring Boot 3.5.x**
-- **Prerequisites**: JDK 25 and Maven 3.9+ must be on `PATH`. The build is JDK 25–specific; older JDKs will not compile.
+- **JDK 21**, **Spring Boot 3.5.x**
+- **Prerequisites**: JDK 21 and Maven 3.9+ must be on `PATH`.
 - Java package: `hr.oblivion.countryroute`
 - Maven artifact: `country-route-calc`
 
@@ -42,28 +42,33 @@
 
 ## 3. REST API
 
-**Endpoint**: `GET /routing/{origin}/{destination}` → `{ "route": [...] }`
+**Endpoint**: `GET /v1/routes/{origin}/{destination}` → `{ "origin": "...", "destination": "...", "steps": N, "route": [...] }`
+
+URL is versioned under `/v1` and uses the plural resource noun `routes` (REST convention). Deviates from SPEC.md's `/routing/...` — intentional, see Key Decisions below.
 
 **Input handling**:
-- cca3 path variables normalized to uppercase before lookup (accepts `cze`, `Cze`, `CZE` identically — defensive, avoids surprises)
-- After normalization, validated against `[A-Z]{3}` — malformed input → 400
+- cca3 path variables format-validated via `@Pattern("[A-Za-z]{3}")` on `@Validated` controller — malformed input → 400 with `ConstraintViolationException` translated to ProblemDetail
+- Inside the handler, normalized to uppercase before graph lookup (accepts `cze`, `Cze`, `CZE` identically)
 
 **Response cases**:
 
 | Case | Status | Body |
 |---|---|---|
-| Route found | 200 | `{ "route": ["CZE", "AUT", "ITA"] }` |
-| Origin == destination | 200 | `{ "route": ["CZE"] }` — degenerate route, zero crossings, journey trivially exists |
-| Unknown cca3 | 400 | ProblemDetail, `type=urn:country-route-calc:errors:unknown-country-code`, extensions: `code`, `field` (`origin`/`destination`) |
-| No land route (e.g. `ISL → DEU`) | 400 | ProblemDetail, `type=urn:country-route-calc:errors:no-land-route`, extensions: `origin`, `destination` |
+| Route found | 200 | `{ "origin":"CZE", "destination":"ITA", "steps":2, "route":["CZE","AUT","ITA"] }` |
+| Origin == destination | 200 | `{ "origin":"CZE", "destination":"CZE", "steps":0, "route":["CZE"] }` — degenerate route, journey trivially exists |
+| Unknown cca3 | 404 | ProblemDetail, `type=urn:country-route-calc:errors:unknown-country-code`, extensions: `value`, `field` (`origin`/`destination`) |
+| No land route (e.g. `ISL → DEU`) | 404 | ProblemDetail, `type=urn:country-route-calc:errors:no-land-route`, extensions: `origin`, `destination` |
 | Malformed cca3 | 400 | ProblemDetail, `type=urn:country-route-calc:errors:invalid-country-code`, extensions: `value`, `field` |
+
+400 is reserved for "you sent something syntactically bad"; 404 covers "what you asked for doesn't exist in the dataset / can't be computed". Deviates from SPEC.md (which specifies 400 across the board) — intentional.
 
 **Error format**: RFC 7807 Problem Details (`application/problem+json`), produced via Spring 6's built-in `ProblemDetail` + `@RestControllerAdvice`. Standard fields (`type`, `title`, `status`, `detail`, `instance`) plus typed extensions per case. Spring Boot 3 idiomatic — no bespoke error envelope.
 
 **Implementation split**:
-- Controller normalizes + format-validates path variables, then checks existence against the loaded country set; missing → `UnknownCountryException`
+- `@Validated` + `@Pattern` reject malformed cca3 before the handler body runs; the resulting `ConstraintViolationException` is translated to the invalid-country-code ProblemDetail in `GlobalExceptionHandler`
+- Controller uppercases the (now validated) inputs and checks existence against the loaded country set; missing → `UnknownCountryException`
 - `RouteFinder` is called only with valid, known codes; `Optional.empty()` means "no land route" → controller raises `NoRouteException`
-- `@RestControllerAdvice` translates both exceptions (plus format-validation failures) to ProblemDetail responses
+- `@RestControllerAdvice` translates all three exceptions to ProblemDetail responses
 
 ## 4. Tests
 - `BfsRouteFinderTest` — verifies fixture graph traversal for linear, direct-border, disconnected, same-node, and unknown-node cases
@@ -74,8 +79,9 @@
   - Spec example `CZE → ITA` → 200 (default BFS yields `["CZE","AUT","ITA"]` for this pair)
   - Active route finder is `BfsRouteFinder`
   - Origin == destination `CZE → CZE` → 200 with `["CZE"]`
-  - Island `ISL → DEU` → 400 (no-land-route ProblemDetail)
-  - Unknown code `ZZZ → ITA` → 400 (unknown-country-code ProblemDetail)
+  - Island `ISL → DEU` → 404 (no-land-route ProblemDetail)
+  - Unknown origin `ZZZ → ITA` → 404 (unknown-country-code ProblemDetail)
+  - Unknown destination `CZE → ZZZ` → 404 (unknown-country-code ProblemDetail)
   - Lowercase normalization `cze → ita` → 200
   - Malformed code `CZ → ITA` → 400 (invalid-country-code ProblemDetail)
 
@@ -85,8 +91,8 @@
 - Default port **8080** (override with `--server.port=9090`)
 - Sample request:
   ```
-  curl http://localhost:8080/routing/CZE/ITA
-  # → {"route":["CZE","AUT","ITA"]}
+  curl http://localhost:8080/v1/routes/CZE/ITA
+  # → {"origin":"CZE","destination":"ITA","steps":2,"route":["CZE","AUT","ITA"]}
   ```
 - **Overrides** (pick whichever fits the workflow — see §6 for precedence):
   ```
@@ -152,6 +158,8 @@ Not applicable here (public URL, no auth). General rule for any future field tha
 | Test source | Embedded | Reproducible, offline, fast |
 | Error format | RFC 7807 ProblemDetail | Spring Boot 3 idiomatic, no bespoke envelope |
 | Source failure mode | Fail-fast at startup | Operator awareness > silent degradation; switch to embedded via config |
-| cca3 input | Normalize to uppercase, validate `[A-Z]{3}` | Defensive against client casing; lets us distinguish malformed vs unknown vs no-route |
+| API URL shape | `/v1/routes/{origin}/{destination}` — versioned, plural resource noun | REST convention (plural collection + identifier); `/v1` prefix lets future breaking changes ship as `/v2` without breaking existing clients. Deviates from SPEC.md's `/routing/...` — intentional, applied during the pre-release hardening pass |
+| HTTP status mapping | 400 for malformed input only; 404 for unknown country & no-route | 400 means "you sent something syntactically bad"; 404 means "what you asked for doesn't exist". Deviates from SPEC.md (which specifies 400 across the board) |
+| cca3 input | `@Validated` + `@Pattern("[A-Za-z]{3}")` on path vars, uppercased before lookup | Declarative validation; `ConstraintViolationException` translates to invalid-country-code ProblemDetail uniformly with other errors |
 | Config layout | Grouped per source, typed `@ConfigurationProperties` + `@Validated` | Idiomatic Spring; fails fast on misconfig; scales when sources gain fields (timeout, auth, etc.) |
 | Config override path | CLI > env > profile > committed defaults | Standard Spring precedence; lets operators tweak without rebuilding |
