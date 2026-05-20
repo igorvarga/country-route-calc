@@ -9,12 +9,11 @@
 ## 1. Pluggable Algorithm (Strategy pattern)
 - **Interface**: `RouteFinder { Optional<List<String>> find(String origin, String destination); }`
 - **Implementations**:
-  - `DijkstraRouteFinder` *(default)* — shortest summed centroid-to-centroid haversine distance; uses `latlng` from country data as edge weight
-  - `BfsRouteFinder` — fewest border crossings, O(V+E); matches spec example literally
-  - `AStarRouteFinder` — same optimization target as Dijkstra, heuristic-guided with haversine-to-goal
-  - `BidirectionalBfsRouteFinder` — same target as BFS (hop count), searched from both ends
-- **Selection**: `routing.algorithm=dijkstra|bfs|astar|bidirectionalBfs` in `application.properties`. All beans are registered with camelCase names (`@Component("dijkstra")`, `@Component("bidirectionalBfs")`, …); a `RouteFinderFactory` resolves the active one from a Spring-injected `Map<String, RouteFinder>` keyed by bean name. Keeps wiring testable — tests can inject any algorithm directly without reconfiguring the context.
-- **Validation**: factory checks the configured value against the `Map` keyset in `@PostConstruct`; unknown value throws `IllegalStateException` so the app fails to start with a clear message.
+  - `BfsRouteFinder` *(default)* — deterministic fewest-border-crossings route, O(V+E); best match for the spec's "any possible land route"
+  - `DijkstraRouteFinder` — optional centroid-to-centroid WGS84 distance weighting using GeographicLib
+- **Selection**: `routing.algorithm=bfs|dijkstra` in `application.properties`. Beans are registered as `@Component("bfs")` and `@Component("dijkstra")`; `RoutingConfig` resolves the active one from a Spring-injected `Map<String, RouteFinder>` keyed by bean name.
+- **Validation**: unknown values throw `IllegalStateException` during startup with the available finder keys.
+- **Determinism**: BFS sorts neighbors before traversal so equal-hop alternatives resolve predictably.
 
 ## 2. Pluggable JSON Source (Strategy pattern)
 - **Interface**: `CountrySource { CountryDataset load(); }`
@@ -72,7 +71,7 @@
 - `RemoteCountrySourceTest` — `MockRestServiceServer` verifies the URL is hit correctly and JSON parses end-to-end
 - `RouteFinderFactoryTest` — config-driven selection: each value of `routing.algorithm` resolves to its corresponding finder; unknown value fails fast at startup
 - `RoutingControllerIT` — `@SpringBootTest` with `countries.source=embedded` so tests stay offline + deterministic. Covers:
-  - Spec example `CZE → ITA` → 200 (default Dijkstra yields `["CZE","AUT","ITA"]` for this pair)
+  - Spec example `CZE → ITA` → 200 (default BFS yields `["CZE","AUT","ITA"]` for this pair)
   - Origin == destination `CZE → CZE` → 200 with `["CZE"]`
   - Island `ISL → DEU` → 400 (no-land-route ProblemDetail)
   - Unknown code `ZZZ → ITA` → 400 (unknown-country-code ProblemDetail)
@@ -152,8 +151,8 @@ Not applicable here (public URL, no auth). General rule for any future field tha
 ## Key Decisions
 | | Choice | Why |
 |---|---|---|
-| Default algorithm | Dijkstra (centroid-weighted) | "Shortest by distance" reads as a more useful real-world default than "fewest crossings"; no heuristic caveats |
-| Algorithm alternatives | BFS, A*, Bidirectional BFS | Pluggability is a **demo affordance** — production picks one at startup |
+| Default algorithm | BFS | The spec asks for any possible land route; BFS is efficient and returns a deterministic fewest-border-crossings route |
+| Algorithm alternatives | Dijkstra | Optional centroid-distance weighting remains available but is not required for spec correctness |
 | Default source | Remote | Spec says fetch from that URL |
 | Test source | Embedded | Reproducible, offline, fast |
 | Error format | RFC 7807 ProblemDetail | Spring Boot 3 idiomatic, no bespoke envelope |

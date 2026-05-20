@@ -15,7 +15,7 @@ public class DistanceConfig {
     @Primary
     public DistanceCalculator geographicLibDistanceCalculator() {
         DistanceCalculator calculator = new GeographicLibDistanceCalculator();
-        log.info("Active distance calculator: {}", calculator.name());
+        log.info("Configured distance calculator: {}", calculator.name());
         return calculator;
     }
 

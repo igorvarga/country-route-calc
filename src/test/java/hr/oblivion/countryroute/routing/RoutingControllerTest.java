@@ -22,6 +22,14 @@ class RoutingControllerTest {
     @Autowired
     private DistanceCalculator distanceCalculator;
 
+    @Autowired
+    private RouteFinder routeFinder;
+
+    @Test
+    void springUsesBfsRouteFinderByDefault() {
+        assertThat(routeFinder).isInstanceOf(BfsRouteFinder.class);
+    }
+
     @Test
     void springUsesGeographicLibDistanceCalculatorByDefault() {
         assertThat(distanceCalculator).isInstanceOf(GeographicLibDistanceCalculator.class);

@@ -1,6 +1,6 @@
 # Country Route Calculator
 
-Spring Boot service that calculates a land route between two countries by walking the border graph from [mledoze/countries](https://github.com/mledoze/countries).
+Spring Boot service that calculates a land route between two countries by walking the border graph from [mledoze/countries](https://github.com/mledoze/countries). By default it returns a deterministic fewest-border-crossings route using BFS.
 
 ## Prerequisites
 
