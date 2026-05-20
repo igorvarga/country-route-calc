@@ -58,7 +58,7 @@ public class BfsRouteFinder implements RouteFinder {
       Map<String, String> predecessor, String origin, String destination) {
     List<String> path = new ArrayList<>();
     String current = destination;
-    while (current != null && !current.equals(origin)) {
+    while (!current.equals(origin)) {
       path.add(current);
       current = predecessor.get(current);
     }

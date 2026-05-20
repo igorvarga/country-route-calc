@@ -102,10 +102,6 @@ public final class CountryGraph {
     return byCode.containsKey(cca3);
   }
 
-  public Set<String> codes() {
-    return byCode.keySet();
-  }
-
   public int size() {
     return byCode.size();
   }
