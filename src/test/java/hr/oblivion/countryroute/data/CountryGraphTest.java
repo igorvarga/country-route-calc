@@ -15,8 +15,8 @@ class CountryGraphTest {
         CountryGraph graph = CountryGraph.from(dataset);
 
         assertThat(graph.size()).isEqualTo(7);
-        assertThat(graph.neighbors("CZE")).containsExactlyInAnyOrder("AUT", "DEU", "POL", "SVK");
-        assertThat(graph.neighbors("AUT")).containsExactlyInAnyOrder("CZE", "DEU", "ITA", "SVK");
+        assertThat(graph.neighbors("CZE")).containsExactly("AUT", "DEU", "POL", "SVK");
+        assertThat(graph.neighbors("AUT")).containsExactly("CZE", "DEU", "ITA", "SVK");
     }
 
     @Test

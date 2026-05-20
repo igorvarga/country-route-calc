@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -16,9 +17,9 @@ public final class CountryGraph {
     private static final Logger log = LoggerFactory.getLogger(CountryGraph.class);
 
     private final Map<String, Country> byCode;
-    private final Map<String, Set<String>> adjacency;
+    private final Map<String, List<String>> adjacency;
 
-    private CountryGraph(Map<String, Country> byCode, Map<String, Set<String>> adjacency) {
+    private CountryGraph(Map<String, Country> byCode, Map<String, List<String>> adjacency) {
         this.byCode = byCode;
         this.adjacency = adjacency;
     }
@@ -56,14 +57,14 @@ public final class CountryGraph {
             log.warn("Detected {} asymmetric border declarations (treated as undirected)", asymmetric);
         }
 
-        Map<String, Set<String>> immutableAdjacency = adjacency.entrySet().stream()
-                .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> Set.copyOf(e.getValue())));
+        Map<String, List<String>> immutableAdjacency = adjacency.entrySet().stream()
+                .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> e.getValue().stream().sorted().toList()));
 
         return new CountryGraph(Map.copyOf(byCode), immutableAdjacency);
     }
 
-    public Set<String> neighbors(String cca3) {
-        return adjacency.getOrDefault(cca3, Set.of());
+    public List<String> neighbors(String cca3) {
+        return adjacency.getOrDefault(cca3, List.of());
     }
 
     public boolean contains(String cca3) {

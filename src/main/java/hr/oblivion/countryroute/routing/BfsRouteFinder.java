@@ -40,7 +40,7 @@ public class BfsRouteFinder implements RouteFinder {
 
         while (!queue.isEmpty()) {
             String current = queue.remove();
-            for (String neighbor : sortedNeighbors(current)) {
+            for (String neighbor : graph.neighbors(current)) {
                 if (!visited.add(neighbor)) {
                     continue;
                 }
@@ -53,10 +53,6 @@ public class BfsRouteFinder implements RouteFinder {
         }
 
         return Optional.empty();
-    }
-
-    private List<String> sortedNeighbors(String code) {
-        return graph.neighbors(code).stream().sorted().toList();
     }
 
     private List<String> reconstruct(Map<String, String> predecessor, String origin, String destination) {
