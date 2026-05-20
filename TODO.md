@@ -26,3 +26,10 @@ Record SHA-256 of raw JSON bytes in `DatasetMetadata` so identical content acros
 - Caching layer integrity checks (if one is added later)
 
 Skipped for now — adds a hashing step and metadata field with no current consumer.
+
+## Bidirectional BFS
+If the graph grows substantially beyond the current country-border dataset, consider adding `BidirectionalBfsRouteFinder` as another `RouteFinder` implementation.
+
+- Same result quality as BFS: fewest border crossings
+- Potentially fewer explored nodes for long routes by searching from both origin and destination
+- Not needed for the current ~250-country graph; normal BFS is simpler and fast enough

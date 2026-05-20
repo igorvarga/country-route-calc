@@ -6,13 +6,13 @@
 - Java package: `hr.oblivion.countryroute`
 - Maven artifact: `country-route-calc`
 
-## 1. Pluggable Algorithm (Strategy pattern)
+## 1. Route Algorithm
 - **Interface**: `RouteFinder { Optional<List<String>> find(String origin, String destination); }`
 - **Implementations**:
   - `BfsRouteFinder` — deterministic fewest-border-crossings route, O(V+E); best match for the spec's "any possible land route"
 - **Selection**: `routing.algorithm=bfs` in `application.properties`. `RoutingConfig` resolves the active implementation from Spring's `Map<String, RouteFinder>` so adding a future algorithm only requires another named `RouteFinder` bean and a config value.
 - **Validation**: unknown values throw `IllegalStateException` during startup with the available finder keys.
-- **Determinism**: BFS sorts neighbors before traversal so equal-hop alternatives resolve predictably.
+- **Determinism**: `CountryGraph` pre-sorts adjacency lists once when built, so equal-hop alternatives resolve predictably without per-request sorting.
 
 ## 2. Pluggable JSON Source (Strategy pattern)
 - **Interface**: `CountrySource { CountryDataset load(); }`
@@ -21,6 +21,7 @@
   - `EmbeddedCountrySource` — reads bundled `src/main/resources/data/countries.json` (used for tests + offline mode); JSON is **manually committed** to the repo — refresh with `curl -o src/main/resources/data/countries.json https://raw.githubusercontent.com/mledoze/countries/master/countries.json`. No build-time network dependency.
   - `LocalFileCountrySource` — reads configurable path on disk
 - **Failure mode**: **fail-fast at startup** if the configured source can't load (network error, bad path, malformed JSON). Application logs the cause and exits non-zero. Operator can switch to `countries.source=embedded` to keep running.
+- **Metadata**: startup logs source, concrete location, loaded timestamp, and country count.
 - **Loader behavior** (applies after parsing, regardless of source):
   - Graph treated as **undirected**: edge (A, B) exists if A lists B as border OR B lists A
   - Asymmetric border entries logged at WARN — diagnostic only, not blocking
@@ -67,9 +68,11 @@
 ## 4. Tests
 - `BfsRouteFinderTest` — verifies fixture graph traversal for linear, direct-border, disconnected, same-node, and unknown-node cases
 - `EmbeddedCountrySourceTest` — Jackson mapping from a trimmed JSON fixture
-- `RemoteCountrySourceTest` — `MockRestServiceServer` verifies the URL is hit correctly and JSON parses end-to-end
-- `RoutingControllerIT` — `@SpringBootTest` with `countries.source=embedded` so tests stay offline + deterministic. Covers:
+- `CountryGraphTest` — verifies undirected graph construction, sorted neighbors, islands, and skipped unknown borders
+- `CountryRouteApplicationTest` — verifies the Spring context loads with the embedded dataset and graph
+- `RoutingControllerTest` — `@SpringBootTest` with `countries.source=embedded` so tests stay offline + deterministic. Covers:
   - Spec example `CZE → ITA` → 200 (default BFS yields `["CZE","AUT","ITA"]` for this pair)
+  - Active route finder is `BfsRouteFinder`
   - Origin == destination `CZE → CZE` → 200 with `["CZE"]`
   - Island `ISL → DEU` → 400 (no-land-route ProblemDetail)
   - Unknown code `ZZZ → ITA` → 400 (unknown-country-code ProblemDetail)
@@ -93,10 +96,10 @@
   # Env vars (containers, 12-factor; Spring relaxed-binding)
   COUNTRIES_SOURCE=local COUNTRIES_LOCAL_PATH=/tmp/countries.json java -jar target/country-route-calc-*.jar
 
-  # Profile (tagged set of overrides, e.g. personal dev settings)
-  java -jar target/country-route-calc-*.jar --spring.profiles.active=local
+  # Embedded offline mode
+  COUNTRIES_SOURCE=embedded java -jar target/country-route-calc-*.jar
   ```
-- **README.md** to be generated as a brief, minimal version of this section + §6 — covering prereqs, build, run, sample request, common overrides. Satisfies SPEC's "build & run instructions" deliverable.
+- `README.md` covers prerequisites, build, run, sample request, common overrides, and tests. This satisfies SPEC's "build & run instructions" deliverable.
 
 ## 6. Configuration
 
@@ -107,12 +110,6 @@
 |---|---|
 | `src/main/resources/application.properties` | Defaults that boot the app correctly out of the box; doubles as documentation of every knob |
 | `src/test/resources/application.properties` | Test-classpath overrides (forces `countries.source=embedded`); test classpath wins over main during `mvn test` — no `@ActiveProfiles` needed |
-| `application-local.properties.example` | Template showing available fields, with placeholder values only |
-
-### Files **not** committed (gitignored)
-| File | Purpose |
-|---|---|
-| `application-local.properties` | Per-developer overrides; activated via `--spring.profiles.active=local` |
 
 ### Override precedence (highest → lowest)
 1. CLI args: `--countries.source=local`
@@ -150,7 +147,7 @@ Not applicable here (public URL, no auth). General rule for any future field tha
 | | Choice | Why |
 |---|---|---|
 | Default algorithm | BFS | The spec asks for any possible land route; BFS is efficient and returns a deterministic fewest-border-crossings route |
-| Algorithm alternatives | None in mainline | Dijkstra/geographic weighting was removed from mainline as unnecessary for the spec; preserved in git branch `dijkstra-distance-routing` |
+| Algorithm extension point | `RouteFinder` + `RoutingConfig` | Mainline stays BFS-only, but another named `RouteFinder` can be added later without changing controller code |
 | Default source | Remote | Spec says fetch from that URL |
 | Test source | Embedded | Reproducible, offline, fast |
 | Error format | RFC 7807 ProblemDetail | Spring Boot 3 idiomatic, no bespoke envelope |
