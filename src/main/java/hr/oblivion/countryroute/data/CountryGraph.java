@@ -10,11 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public final class CountryGraph {
 
     private static final Logger log = LoggerFactory.getLogger(CountryGraph.class);
+    private static final Pattern CCA3_PATTERN = Pattern.compile("[A-Z]{3}");
 
     private final Map<String, Country> byCode;
     private final Map<String, List<String>> adjacency;
@@ -25,8 +27,20 @@ public final class CountryGraph {
     }
 
     public static CountryGraph from(CountryDataset dataset) {
+        if (dataset.countries().isEmpty()) {
+            throw new IllegalStateException("Country dataset is empty");
+        }
+        dataset.countries().forEach(CountryGraph::validateCountryCode);
+
         Map<String, Country> byCode = dataset.countries().stream()
-                .collect(Collectors.toMap(Country::cca3, Function.identity(), (a, b) -> a, LinkedHashMap::new));
+                .collect(Collectors.toMap(
+                        Country::cca3,
+                        Function.identity(),
+                        (a, b) -> {
+                            throw new IllegalStateException("Duplicate country cca3 in dataset: " + a.cca3());
+                        },
+                        LinkedHashMap::new
+                ));
 
         Map<String, Set<String>> adjacency = new HashMap<>();
         for (Country c : dataset.countries()) {
@@ -63,16 +77,18 @@ public final class CountryGraph {
         return new CountryGraph(Map.copyOf(byCode), immutableAdjacency);
     }
 
+    private static void validateCountryCode(Country country) {
+        if (!CCA3_PATTERN.matcher(country.cca3()).matches()) {
+            throw new IllegalStateException("Invalid country cca3 in dataset: " + country.cca3());
+        }
+    }
+
     public List<String> neighbors(String cca3) {
         return adjacency.getOrDefault(cca3, List.of());
     }
 
     public boolean contains(String cca3) {
         return byCode.containsKey(cca3);
-    }
-
-    public Country country(String cca3) {
-        return byCode.get(cca3);
     }
 
     public Set<String> codes() {

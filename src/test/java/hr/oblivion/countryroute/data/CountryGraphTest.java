@@ -3,7 +3,11 @@ package hr.oblivion.countryroute.data;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CountryGraphTest {
 
@@ -41,5 +45,44 @@ class CountryGraphTest {
         CountryGraph graph = CountryGraph.from(dataset);
         assertThat(graph.contains("FRA")).isFalse();
         assertThat(graph.neighbors("ITA")).containsExactly("AUT");
+    }
+
+    @Test
+    void duplicateCca3FailsFast() {
+        Country first = new Country("CZE", List.of(), List.of(), new Country.Name("Czechia"));
+        Country duplicate = new Country("CZE", List.of(), List.of(), new Country.Name("Duplicate Czechia"));
+        CountryDataset duplicateDataset = new CountryDataset(
+                List.of(first, duplicate),
+                new DatasetMetadata("test", "memory", Instant.now(), 2)
+        );
+
+        assertThatThrownBy(() -> CountryGraph.from(duplicateDataset))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Duplicate country cca3 in dataset: CZE");
+    }
+
+    @Test
+    void emptyDatasetFailsFast() {
+        CountryDataset emptyDataset = new CountryDataset(
+                List.of(),
+                new DatasetMetadata("test", "memory", Instant.now(), 0)
+        );
+
+        assertThatThrownBy(() -> CountryGraph.from(emptyDataset))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Country dataset is empty");
+    }
+
+    @Test
+    void malformedCountryCca3FailsFast() {
+        Country malformed = new Country("CZ", List.of(), List.of(), new Country.Name("Malformed"));
+        CountryDataset malformedDataset = new CountryDataset(
+                List.of(malformed),
+                new DatasetMetadata("test", "memory", Instant.now(), 1)
+        );
+
+        assertThatThrownBy(() -> CountryGraph.from(malformedDataset))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Invalid country cca3 in dataset: CZ");
     }
 }
