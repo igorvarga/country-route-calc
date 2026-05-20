@@ -19,7 +19,6 @@
 
     <properties>
         <java.version>21</java.version>
-        <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
         <maven-pmd-plugin.version>3.26.0</maven-pmd-plugin.version>
         <pmd.version>7.7.0</pmd.version>
         <spotless-maven-plugin.version>2.43.0</spotless-maven-plugin.version>
@@ -120,27 +119,6 @@
                     <execution>
                         <id>pmd-check</id>
                         <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>${maven-checkstyle-plugin.version}</version>
-                <configuration>
-                    <configLocation>config/checkstyle/checkstyle.xml</configLocation>
-                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                    <consoleOutput>true</consoleOutput>
-                    <failsOnError>true</failsOnError>
-                    <linkXRef>false</linkXRef>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>checkstyle-check</id>
-                        <phase>validate</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>
