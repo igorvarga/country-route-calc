@@ -4,6 +4,8 @@ import java.util.List;
 
 public interface DistanceCalculator {
 
+    String name();
+
     default double distanceKm(List<Double> a, List<Double> b) {
         if (a == null || b == null || a.size() < 2 || b.size() < 2) {
             return Double.POSITIVE_INFINITY;

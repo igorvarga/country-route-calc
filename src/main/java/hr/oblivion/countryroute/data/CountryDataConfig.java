@@ -22,8 +22,8 @@ public class CountryDataConfig {
         }
         CountryDataset dataset = source.load();
         DatasetMetadata md = dataset.metadata();
-        log.info("Loaded {} countries from source={} at {}",
-                md.countryCount(), md.source(), md.loadedAt());
+        log.info("Country dataset metadata: source={} location={} countryCount={} loadedAt={}",
+                md.source(), md.location(), md.countryCount(), md.loadedAt());
         return dataset;
     }
 

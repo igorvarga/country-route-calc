@@ -5,6 +5,11 @@ public final class HaversineDistanceCalculator implements DistanceCalculator {
     private static final double EARTH_RADIUS_KM = 6371.0;
 
     @Override
+    public String name() {
+        return "haversine";
+    }
+
+    @Override
     public double distanceKm(double lat1, double lng1, double lat2, double lng2) {
         double dLat = Math.toRadians(lat2 - lat1);
         double dLng = Math.toRadians(lng2 - lng1);

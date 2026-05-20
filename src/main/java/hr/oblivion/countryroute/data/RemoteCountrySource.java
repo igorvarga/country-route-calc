@@ -39,7 +39,7 @@ public class RemoteCountrySource implements CountrySource {
             List<Country> countries = objectMapper.readValue(body, new TypeReference<>() {});
             return new CountryDataset(
                     countries,
-                    new DatasetMetadata("remote", Instant.now(), countries.size())
+                    new DatasetMetadata("remote", url, Instant.now(), countries.size())
             );
         } catch (Exception e) {
             throw new IllegalStateException("Failed to parse countries JSON from " + url, e);

@@ -21,6 +21,7 @@ class CountryRouteApplicationTest {
     void contextLoadsAndPopulatesDatasetFromEmbeddedSource() {
         assertThat(dataset.countries()).isNotEmpty();
         assertThat(dataset.metadata().source()).isEqualTo("embedded");
+        assertThat(dataset.metadata().location()).isEqualTo("classpath:data/countries.json");
         assertThat(graph.size()).isGreaterThan(200);
         assertThat(graph.contains("CZE")).isTrue();
         assertThat(graph.neighbors("CZE")).contains("AUT");

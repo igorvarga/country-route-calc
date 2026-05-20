@@ -34,7 +34,7 @@ public class LocalFileCountrySource implements CountrySource {
             List<Country> countries = objectMapper.readValue(stream, new TypeReference<>() {});
             return new CountryDataset(
                     countries,
-                    new DatasetMetadata("local", Instant.now(), countries.size())
+                    new DatasetMetadata("local", path.toAbsolutePath().normalize().toString(), Instant.now(), countries.size())
             );
         } catch (IOException e) {
             throw new IllegalStateException("Failed to load countries from " + path, e);

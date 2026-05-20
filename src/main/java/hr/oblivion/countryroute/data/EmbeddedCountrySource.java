@@ -34,7 +34,7 @@ public class EmbeddedCountrySource implements CountrySource {
             List<Country> countries = objectMapper.readValue(stream, new TypeReference<>() {});
             return new CountryDataset(
                     countries,
-                    new DatasetMetadata("embedded", Instant.now(), countries.size())
+                    new DatasetMetadata("embedded", "classpath:" + resourcePath, Instant.now(), countries.size())
             );
         } catch (IOException e) {
             throw new IllegalStateException("Failed to load embedded countries from " + resourcePath, e);

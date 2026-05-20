@@ -14,12 +14,14 @@ class DistanceCalculatorTest {
     @Test
     void geographicLibUsesWgs84GeodesicDistance() {
         double distanceKm = geographicLib.distanceKm(50.0755, 14.4378, 48.2082, 16.3738);
+        assertThat(geographicLib.name()).isEqualTo("geographiclib");
         assertThat(distanceKm).isCloseTo(251.136, withinKilometers(0.001));
     }
 
     @Test
     void haversineImplementationRemainsAvailable() {
         double distanceKm = haversine.distanceKm(50.0755, 14.4378, 48.2082, 16.3738);
+        assertThat(haversine.name()).isEqualTo("haversine");
         assertThat(distanceKm).isCloseTo(250.869, withinKilometers(0.001));
     }
 

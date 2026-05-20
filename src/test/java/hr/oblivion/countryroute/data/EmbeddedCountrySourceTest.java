@@ -16,6 +16,7 @@ class EmbeddedCountrySourceTest {
 
         assertThat(dataset.countries()).hasSize(7);
         assertThat(dataset.metadata().source()).isEqualTo("embedded");
+        assertThat(dataset.metadata().location()).isEqualTo("classpath:data/countries-fixture.json");
         assertThat(dataset.metadata().countryCount()).isEqualTo(7);
 
         Country czechia = dataset.countries().stream()
