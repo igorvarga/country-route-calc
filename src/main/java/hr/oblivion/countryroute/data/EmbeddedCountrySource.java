@@ -23,7 +23,7 @@ public class EmbeddedCountrySource implements CountrySource {
         this(objectMapper, DEFAULT_RESOURCE);
     }
 
-    EmbeddedCountrySource(ObjectMapper objectMapper, String resourcePath) {
+    public EmbeddedCountrySource(ObjectMapper objectMapper, String resourcePath) {
         this.objectMapper = objectMapper;
         this.resourcePath = resourcePath;
     }

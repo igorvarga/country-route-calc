@@ -19,6 +19,16 @@ class RoutingControllerTest {
     private MockMvc mvc;
 
     @Test
+    void specExampleCzeToItaReturnsThreeStepRouteViaAustria() throws Exception {
+        mvc.perform(get("/routing/CZE/ITA"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.route", hasSize(3)))
+                .andExpect(jsonPath("$.route[0]").value("CZE"))
+                .andExpect(jsonPath("$.route[1]").value("AUT"))
+                .andExpect(jsonPath("$.route[2]").value("ITA"));
+    }
+
+    @Test
     void directBorderReturns200WithTwoStepRoute() throws Exception {
         mvc.perform(get("/routing/CZE/AUT"))
                 .andExpect(status().isOk())
