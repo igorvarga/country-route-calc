@@ -31,18 +31,25 @@ public final class CountryGraph {
     }
     dataset.countries().forEach(CountryGraph::validateCountryCode);
 
-    Map<String, Country> byCode =
-        dataset.countries().stream()
-            .collect(
-                Collectors.toMap(
-                    Country::cca3,
-                    Function.identity(),
-                    (a, b) -> {
-                      throw new IllegalStateException(
-                          "Duplicate country cca3 in dataset: " + a.cca3());
-                    },
-                    LinkedHashMap::new));
+    Map<String, Country> byCode = indexByCca3(dataset);
+    Map<String, Set<String>> adjacency = buildAdjacency(byCode, dataset);
+    return new CountryGraph(Map.copyOf(byCode), freezeAdjacency(adjacency));
+  }
 
+  private static Map<String, Country> indexByCca3(CountryDataset dataset) {
+    return dataset.countries().stream()
+        .collect(
+            Collectors.toMap(
+                Country::cca3,
+                Function.identity(),
+                (a, b) -> {
+                  throw new IllegalStateException("Duplicate country cca3 in dataset: " + a.cca3());
+                },
+                LinkedHashMap::new));
+  }
+
+  private static Map<String, Set<String>> buildAdjacency(
+      Map<String, Country> byCode, CountryDataset dataset) {
     Map<String, Set<String>> adjacency = new HashMap<>();
     for (Country c : dataset.countries()) {
       adjacency.put(c.cca3(), new HashSet<>());
@@ -71,14 +78,14 @@ public final class CountryGraph {
     if (asymmetric > 0) {
       log.warn("Detected {} asymmetric border declarations (treated as undirected)", asymmetric);
     }
+    return adjacency;
+  }
 
-    Map<String, List<String>> immutableAdjacency =
-        adjacency.entrySet().stream()
-            .collect(
-                Collectors.toUnmodifiableMap(
-                    Map.Entry::getKey, e -> e.getValue().stream().sorted().toList()));
-
-    return new CountryGraph(Map.copyOf(byCode), immutableAdjacency);
+  private static Map<String, List<String>> freezeAdjacency(Map<String, Set<String>> adjacency) {
+    return adjacency.entrySet().stream()
+        .collect(
+            Collectors.toUnmodifiableMap(
+                Map.Entry::getKey, e -> e.getValue().stream().sorted().toList()));
   }
 
   private static void validateCountryCode(Country country) {

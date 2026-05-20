@@ -1,5 +1,6 @@
 package hr.oblivion.countryroute.data;
 
+import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
@@ -38,7 +39,7 @@ public class RemoteCountrySource implements CountrySource {
       List<Country> countries = objectMapper.readValue(body, new TypeReference<>() {});
       return new CountryDataset(
           countries, new DatasetMetadata("remote", url, Instant.now(), countries.size()));
-    } catch (Exception e) {
+    } catch (JacksonException e) {
       throw new IllegalStateException("Failed to parse countries JSON from " + url, e);
     }
   }

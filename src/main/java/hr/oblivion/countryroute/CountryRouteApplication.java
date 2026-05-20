@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan
+@SuppressWarnings("PMD.UseUtilityClass")
 public class CountryRouteApplication {
 
   public static void main(String[] args) {

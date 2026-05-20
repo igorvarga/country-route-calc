@@ -1,5 +1,6 @@
 package hr.oblivion.countryroute.data;
 
+import java.util.Locale;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +14,7 @@ public class CountryDataConfig {
 
   @Bean
   public CountryDataset countryDataset(Map<String, CountrySource> sources, CountriesConfig config) {
-    String key = config.source().name().toLowerCase();
+    String key = config.source().name().toLowerCase(Locale.ROOT);
     CountrySource source = sources.get(key);
     if (source == null) {
       throw new IllegalStateException(
