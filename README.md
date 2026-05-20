@@ -4,7 +4,7 @@ Spring Boot service that calculates a land route between two countries by walkin
 
 ## Prerequisites
 
-JDK 25 and Maven 3.9+ on `PATH`. The build is JDK 25–specific.
+JDK 21 and Maven 3.9+ on `PATH`.
 
 ## Build & run
 
@@ -50,7 +50,7 @@ java -jar target/country-route-calc-*.jar --server.port=9090
 mvn verify
 ```
 
-Formatting can be applied with:
+Runs tests plus Spotless (google-java-format) and PMD checks. Apply formatting with:
 
 ```
 mvn spotless:apply
