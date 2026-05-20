@@ -20,13 +20,16 @@ Listens on `http://localhost:8080`.
 ## Usage
 
 ```
-$ curl http://localhost:8080/routing/CZE/ITA
-{"route":["CZE","AUT","ITA"]}
+$ curl http://localhost:8080/v1/routes/CZE/ITA
+{"origin":"CZE","destination":"ITA","steps":2,"route":["CZE","AUT","ITA"]}
 ```
 
 Country codes are [ISO 3166-1 alpha-3](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3) (`cca3`), case-insensitive on input.
 
-Errors return HTTP 400 with an [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807) ProblemDetail body for: unknown country code, malformed code (not three letters), or no land route (e.g. island to mainland).
+Errors return an [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807) ProblemDetail body:
+
+- `400 Bad Request` — malformed code (not three letters)
+- `404 Not Found` — unknown country code, or no land route (e.g. island to mainland)
 
 ## Common overrides
 

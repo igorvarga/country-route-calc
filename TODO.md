@@ -27,6 +27,20 @@ Record SHA-256 of raw JSON bytes in `DatasetMetadata` so identical content acros
 
 Skipped for now — adds a hashing step and metadata field with no current consumer.
 
+## OpenAPI / Swagger documentation
+Add `springdoc-openapi-starter-webmvc-ui` so the API is self-documenting at `/swagger-ui.html` and machine-readable at `/v3/api-docs`. Industry table stakes for a public REST API; pairs naturally with the existing `RoutingController` and `GlobalExceptionHandler` (the latter's ProblemDetail responses surface in the spec via `@ApiResponse`).
+
+- Add the dependency
+- Annotate `RoutingController` with `@Operation`, `@Parameter`, and per-status `@ApiResponse`
+- Configure a stable `info` block (title, version) so `/v3/api-docs` is consumable by codegen
+
+## Spring Boot Actuator
+Add `spring-boot-starter-actuator` for the standard ops endpoints: `/actuator/health`, `/actuator/info`, `/actuator/metrics`. Required for k8s liveness/readiness probes and any Prometheus-style scraping.
+
+- Add the dependency
+- Expose only `health` and `info` by default; gate `metrics`/`env` behind security if added
+- Pair `/actuator/info` with the deferred `DatasetMetadata` entry above so operators can see which dataset version is live
+
 ## Bidirectional BFS
 If the graph grows substantially beyond the current country-border dataset, consider adding `BidirectionalBfsRouteFinder` as another `RouteFinder` implementation.
 
