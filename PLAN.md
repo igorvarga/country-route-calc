@@ -9,9 +9,8 @@
 ## 1. Pluggable Algorithm (Strategy pattern)
 - **Interface**: `RouteFinder { Optional<List<String>> find(String origin, String destination); }`
 - **Implementations**:
-  - `BfsRouteFinder` *(default)* — deterministic fewest-border-crossings route, O(V+E); best match for the spec's "any possible land route"
-  - `DijkstraRouteFinder` — optional centroid-to-centroid WGS84 distance weighting using GeographicLib
-- **Selection**: `routing.algorithm=bfs|dijkstra` in `application.properties`. Beans are registered as `@Component("bfs")` and `@Component("dijkstra")`; `RoutingConfig` resolves the active one from a Spring-injected `Map<String, RouteFinder>` keyed by bean name.
+  - `BfsRouteFinder` — deterministic fewest-border-crossings route, O(V+E); best match for the spec's "any possible land route"
+- **Selection**: `routing.algorithm=bfs` in `application.properties`. `RoutingConfig` resolves the active implementation from Spring's `Map<String, RouteFinder>` so adding a future algorithm only requires another named `RouteFinder` bean and a config value.
 - **Validation**: unknown values throw `IllegalStateException` during startup with the available finder keys.
 - **Determinism**: BFS sorts neighbors before traversal so equal-hop alternatives resolve predictably.
 
@@ -66,10 +65,9 @@
 - `@RestControllerAdvice` translates both exceptions (plus format-validation failures) to ProblemDetail responses
 
 ## 4. Tests
-- `DijkstraRouteFinderTest`, `BfsRouteFinderTest`, `AStarRouteFinderTest`, `BidirectionalBfsRouteFinderTest` — all four verified against the same fixture graph (linear, branching, disconnected, same-node); weighted variants asserted on summed distance, hop-based variants on hop count
+- `BfsRouteFinderTest` — verifies fixture graph traversal for linear, direct-border, disconnected, same-node, and unknown-node cases
 - `EmbeddedCountrySourceTest` — Jackson mapping from a trimmed JSON fixture
 - `RemoteCountrySourceTest` — `MockRestServiceServer` verifies the URL is hit correctly and JSON parses end-to-end
-- `RouteFinderFactoryTest` — config-driven selection: each value of `routing.algorithm` resolves to its corresponding finder; unknown value fails fast at startup
 - `RoutingControllerIT` — `@SpringBootTest` with `countries.source=embedded` so tests stay offline + deterministic. Covers:
   - Spec example `CZE → ITA` → 200 (default BFS yields `["CZE","AUT","ITA"]` for this pair)
   - Origin == destination `CZE → CZE` → 200 with `["CZE"]`
@@ -152,7 +150,7 @@ Not applicable here (public URL, no auth). General rule for any future field tha
 | | Choice | Why |
 |---|---|---|
 | Default algorithm | BFS | The spec asks for any possible land route; BFS is efficient and returns a deterministic fewest-border-crossings route |
-| Algorithm alternatives | Dijkstra | Optional centroid-distance weighting remains available but is not required for spec correctness |
+| Algorithm alternatives | None in mainline | Dijkstra/geographic weighting was removed from mainline as unnecessary for the spec; preserved in git branch `dijkstra-distance-routing` |
 | Default source | Remote | Spec says fetch from that URL |
 | Test source | Embedded | Reproducible, offline, fast |
 | Error format | RFC 7807 ProblemDetail | Spring Boot 3 idiomatic, no bespoke envelope |

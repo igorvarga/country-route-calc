@@ -20,20 +20,11 @@ class RoutingControllerTest {
     private MockMvc mvc;
 
     @Autowired
-    private DistanceCalculator distanceCalculator;
-
-    @Autowired
     private RouteFinder routeFinder;
 
     @Test
     void springUsesBfsRouteFinderByDefault() {
         assertThat(routeFinder).isInstanceOf(BfsRouteFinder.class);
-    }
-
-    @Test
-    void springUsesGeographicLibDistanceCalculatorByDefault() {
-        assertThat(distanceCalculator).isInstanceOf(GeographicLibDistanceCalculator.class);
-        assertThat(distanceCalculator.name()).isEqualTo("geographiclib");
     }
 
     @Test

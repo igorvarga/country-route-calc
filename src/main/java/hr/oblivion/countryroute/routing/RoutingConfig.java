@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Primary;
 
 import java.util.Map;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class RoutingConfig {
 
     private static final Logger log = LoggerFactory.getLogger(RoutingConfig.class);
