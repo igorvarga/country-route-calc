@@ -3,6 +3,7 @@ package hr.oblivion.countryroute.routing;
 import hr.oblivion.countryroute.data.CountryGraph;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -63,7 +64,7 @@ public class BfsRouteFinder implements RouteFinder {
       current = predecessor.get(current);
     }
     path.add(origin);
-    java.util.Collections.reverse(path);
+    Collections.reverse(path);
     return path;
   }
 }

@@ -2,7 +2,6 @@ package hr.oblivion.countryroute.data;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,8 +43,7 @@ public final class CountryGraph {
                 Function.identity(),
                 (a, b) -> {
                   throw new IllegalStateException("Duplicate country cca3 in dataset: " + a.cca3());
-                },
-                LinkedHashMap::new));
+                }));
   }
 
   private static Map<String, Set<String>> buildAdjacency(
