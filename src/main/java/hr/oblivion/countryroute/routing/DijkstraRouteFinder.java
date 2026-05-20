@@ -16,9 +16,11 @@ import java.util.PriorityQueue;
 public class DijkstraRouteFinder implements RouteFinder {
 
     private final CountryGraph graph;
+    private final DistanceCalculator distanceCalculator;
 
-    public DijkstraRouteFinder(CountryGraph graph) {
+    public DijkstraRouteFinder(CountryGraph graph, DistanceCalculator distanceCalculator) {
         this.graph = graph;
+        this.distanceCalculator = distanceCalculator;
     }
 
     @Override
@@ -58,7 +60,7 @@ public class DijkstraRouteFinder implements RouteFinder {
     private double weight(String a, String b) {
         Country ca = graph.country(a);
         Country cb = graph.country(b);
-        return Haversine.distanceKm(ca.latlng(), cb.latlng());
+        return distanceCalculator.distanceKm(ca.latlng(), cb.latlng());
     }
 
     private List<String> reconstruct(Map<String, String> predecessor, String origin, String destination) {

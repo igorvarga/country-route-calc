@@ -15,7 +15,7 @@ class DijkstraRouteFinderTest {
     private final CountryGraph graph = CountryGraph.from(
             new EmbeddedCountrySource(new ObjectMapper(), "data/countries-fixture.json").load());
 
-    private final DijkstraRouteFinder finder = new DijkstraRouteFinder(graph);
+    private final DijkstraRouteFinder finder = new DijkstraRouteFinder(graph, new GeographicLibDistanceCalculator());
 
     @Test
     void findsShortestRouteAcrossTwoHops() {
