@@ -71,6 +71,15 @@ class RoutingControllerTest {
   }
 
   @Test
+  void unknownDestinationReturns400WithProblemDetail() throws Exception {
+    mvc.perform(get("/routing/CZE/ZZZ"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.type").value("urn:country-route-calc:errors:unknown-country-code"))
+        .andExpect(jsonPath("$.code").value("ZZZ"))
+        .andExpect(jsonPath("$.field").value("destination"));
+  }
+
+  @Test
   void lowercaseInputIsNormalizedToUppercase() throws Exception {
     mvc.perform(get("/routing/cze/aut"))
         .andExpect(status().isOk())

@@ -45,8 +45,14 @@ class BfsRouteFinderTest {
   }
 
   @Test
-  void returnsEmptyForUnknownNode() {
+  void returnsEmptyForUnknownDestination() {
     Optional<List<String>> route = finder.find("CZE", "ZZZ");
+    assertThat(route).isEmpty();
+  }
+
+  @Test
+  void returnsEmptyForUnknownOrigin() {
+    Optional<List<String>> route = finder.find("ZZZ", "CZE");
     assertThat(route).isEmpty();
   }
 }

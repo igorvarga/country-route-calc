@@ -1,6 +1,7 @@
 package hr.oblivion.countryroute.data;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,16 @@ class EmbeddedCountrySourceTest {
     assertThat(czechia.name().common()).isEqualTo("Czechia");
     assertThat(czechia.borders()).containsExactlyInAnyOrder("AUT", "DEU", "POL", "SVK");
     assertThat(czechia.latlng()).containsExactly(49.75, 15.5);
+  }
+
+  @Test
+  void missingResourceFailsFast() {
+    EmbeddedCountrySource missingSource =
+        new EmbeddedCountrySource(new ObjectMapper(), "data/does-not-exist.json");
+
+    assertThatThrownBy(missingSource::load)
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("Failed to load embedded countries from");
   }
 
   @Test
