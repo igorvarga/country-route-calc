@@ -1,0 +1,44 @@
+[
+  {
+    "name": {"common": "Czechia"},
+    "cca3": "CZE",
+    "borders": ["AUT", "DEU", "POL", "SVK"],
+    "latlng": [49.75, 15.5]
+  },
+  {
+    "name": {"common": "Austria"},
+    "cca3": "AUT",
+    "borders": ["CZE", "DEU", "ITA", "SVK"],
+    "latlng": [47.33333333, 13.33333333]
+  },
+  {
+    "name": {"common": "Germany"},
+    "cca3": "DEU",
+    "borders": ["AUT", "CZE", "POL"],
+    "latlng": [51.0, 9.0]
+  },
+  {
+    "name": {"common": "Poland"},
+    "cca3": "POL",
+    "borders": ["CZE", "DEU", "SVK"],
+    "latlng": [52.0, 20.0]
+  },
+  {
+    "name": {"common": "Slovakia"},
+    "cca3": "SVK",
+    "borders": ["AUT", "CZE", "POL"],
+    "latlng": [48.66666666, 19.5]
+  },
+  {
+    "name": {"common": "Italy"},
+    "cca3": "ITA",
+    "borders": ["AUT", "FRA"],
+    "latlng": [42.83333333, 12.83333333]
+  },
+  {
+    "name": {"common": "Iceland"},
+    "cca3": "ISL",
+    "borders": [],
+    "latlng": [65.0, -18.0]
+  }
+]
