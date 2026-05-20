@@ -47,7 +47,13 @@ java -jar target/country-route-calc-*.jar --server.port=9090
 ## Tests
 
 ```
-mvn test
+mvn verify
+```
+
+Formatting can be applied with:
+
+```
+mvn spotless:apply
 ```
 
 ## More

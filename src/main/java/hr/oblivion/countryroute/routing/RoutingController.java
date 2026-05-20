@@ -26,8 +26,12 @@ public class RoutingController {
         String o = normalize(origin, "origin");
         String d = normalize(destination, "destination");
 
-        if (!graph.contains(o)) throw new UnknownCountryException(o, "origin");
-        if (!graph.contains(d)) throw new UnknownCountryException(d, "destination");
+        if (!graph.contains(o)) {
+            throw new UnknownCountryException(o, "origin");
+        }
+        if (!graph.contains(d)) {
+            throw new UnknownCountryException(d, "destination");
+        }
 
         return finder.find(o, d)
                 .map(RouteResponse::new)
